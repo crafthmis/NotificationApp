@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - ./config/env.json:/app/config/env.json
+      - ./entrypoint.sh:/app/entrypoint.sh
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - GO_ENV=${ENVIRONMENT:-development}
+    networks:
+      - node-network
+    command: ["sh", "-c", "while ! nc -z db ${POSTGRES_PORT:-5432}; do sleep 1; done; echo 'Database is ready!'; ./main"]
+
+  db:
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    environment:
+      - TZ=Africa/Nairobi
+      - PGTZ=Africa/Nairobi
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./config/env.json:/app/config/env.json
+      - ./entrypoint.sh:/docker-entrypoint-initdb.d/entrypoint.sh
+      - pgdata:/var/lib/postgresql/data
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    #entrypoint: ["/app/entrypoint.sh"]
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - node-network
+
+volumes:
+  pgdata:
+
+networks:
+  node-network:
+    driver: bridge
