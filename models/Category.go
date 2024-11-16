@@ -11,8 +11,7 @@ type Category struct {
 	DateCreated time.Time `json:"-" , gorm:"column:date_created;autoCreateTime"`
 	LastUpdate  time.Time `json:"-" , gorm:"column:last_update;autoUpdateTime"`
 	Contacts    []Contact `gorm:"foreignKey:CatID"`
-
-
+	Mapping     []Mapping `gorm:"foreignKey:ParentID"`
 }
 
 func (Category) TableName() string {

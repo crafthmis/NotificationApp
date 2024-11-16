@@ -29,7 +29,7 @@ func GetCategoryByID(Category *models.Category, id string) (err error) {
 	return nil
 }
 func GetCategoriesyByID(Category *[]models.Category, id string) (err error) {
-	if err = db.GetDB().Where("parent_id in (?)", id).Order("cat_id asc").Find(Category).Error; err != nil {
+	if err = db.GetDB().Model(Category).Joins("INNER JOIN tbl_category_mapping ON tbl_category.cat_id = tbl_category_mapping.cat_id").Select("tbl_category.cat_id", "name").Where("tbl_category_mapping.parent_id in (?)", id).Order("tbl_category.cat_id asc").Find(Category).Error; err != nil {
 		return err
 	}
 	return nil

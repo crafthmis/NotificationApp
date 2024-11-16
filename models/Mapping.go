@@ -8,7 +8,7 @@ type Mapping struct {
 	ParentID    int64     `gorm:"column:parent_id;not null"`
 	DateCreated time.Time `json:"-" , gorm:"column:date_created;autoCreateTime"`
 	LastUpdate  time.Time `json:"-" , gorm:"column:last_update;autoUpdateTime"`
-	Contacts    []Contact `gorm:"foreignKey:CatID"`
+	Category    *Category `gorm:"belongsTo:Category;foreignKey:ParentID"`
 }
 
 func (Mapping) TableName() string {

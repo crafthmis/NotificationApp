@@ -227,8 +227,43 @@ func UssdCallback(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(output)
 				w.Write([]byte(fmt.Sprintf("CON Choose your preffered job category. %s", output)))
 				return
-			} else if cnt == 3 && (firstIndexAfterAstk == 1 || firstIndexAfterAstk == 2) {
 
+			} else if cnt == 3 && (firstIndexAfterAstk == 1 || firstIndexAfterAstk == 2) && lastIndexOf == 7 {
+				w.Write([]byte("CON Enter category. "))
+			} else if cnt == 3 && (firstIndexAfterAstk == 1 || firstIndexAfterAstk == 2) && lastIndexOf != 7 {
+
+				var regions []models.Region
+				err := services.GetAllRegion(&regions)
+				if err != nil {
+					w.Write([]byte("END System is currently busy. Kindly try again"))
+					return
+				}
+				var accumulator []string
+				for idx, reg := range regions {
+					result := fmt.Sprintf("\n%d. %s", idx+1, reg.Name)
+					accumulator = append(accumulator, result)
+				}
+				jsonData, err := json.MarshalIndent(regions, "", "  ")
+				if err != nil {
+					fmt.Println("Error marshalling to JSON:", err)
+					w.Write([]byte("END System is currently busy. Kindly try again"))
+					return
+				}
+				updates := map[string]interface{}{
+					"region_payload": string(jsonData),
+				}
+				err = services.UpdateUssdSession(updates, session_id)
+				if err != nil {
+					fmt.Println(err.Error())
+					w.Write([]byte("END System is currently busy. Kindly try again"))
+					return
+				}
+
+				output := strings.Join(accumulator, "")
+				fmt.Println(output)
+				w.Write([]byte(fmt.Sprintf("CON Choose your Region. %s", output)))
+				return
+			} else if cnt == 4 && (firstIndexAfterAstk == 1 || firstIndexAfterAstk == 2) && strings.Contains(text, "7") {
 				var regions []models.Region
 				err := services.GetAllRegion(&regions)
 				if err != nil {
